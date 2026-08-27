@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ali Raza Jervis — Command Center</title>
+<meta name="description" content="Ali Raza Jervis — voice-controlled Windows personal assistant. Command center dashboard." />
+<style>
+:root{
+  --bg:#05070d; --bg2:#0a0f1a; --panel:#0d1420; --panel2:#111a2a;
+  --line:#1c2a40; --line2:#243650;
+  --txt:#e8eef7; --muted:#8aa0bd; --dim:#5b6f8c;
+  --cyan:#22d3ee; --cyan2:#0ea5e9; --green:#34d399; --amber:#fbbf24; --red:#f87171; --violet:#a78bfa;
+  --glow:0 0 24px rgba(34,211,238,.25);
+  --radius:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:radial-gradient(1200px 600px at 80% -10%,#0c1a33 0%,var(--bg) 55%) fixed,var(--bg);
+  color:var(--txt); overflow-x:hidden;
+}
+a{color:var(--cy);text-decoration:none}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#1e3350;border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* Layout */
+.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;background:linear-gradient(180deg,var(--panel),#080d16);border-right:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column;gap:6px;z-index:20}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 8px 18px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.brand-logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--cy),var(--cyan2));display:grid;place-items:center;font-weight:800;color:#04121a;font-size:20px;box-shadow:var(--glow)}
+.brand-name{font-weight:800;font-size:16px;letter-spacing:.5px}
+.brand-sub{font-size:10px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav button{display:flex;align-items:center;gap:12px;background:none;border:none;color:var(--muted);padding:11px 12px;border-radius:11px;cursor:pointer;font-size:14px;font-weight:600;text-align:left;transition:.15s;border:1px solid transparent}
+.nav button:hover{background:var(--panel2);color:var(--txt)}
+.nav button.active{background:linear-gradient(90deg,rgba(34,211,238,.14),transparent);color:var(--cy);border-color:var(--line2)}
+.nav .ico{width:20px;height:20px;display:grid;place-items:center;font-size:16px}
+.side-foot{margin-top:auto;padding:12px;border-top:1px solid var(--line);font-size:10px;color:var(--dim);line-height:1.5}
+
+.main{padding:26px 30px 60px;max-width:1200px;width:100%}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.topbar h1{font-size:22px;font-weight:800;letter-spacing:.3px}
+.topbar .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.top-right{display:flex;align-items:center;gap:16px;}
+.owner{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line2);padding:7px 14px 7px 7px;border-radius:40px;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.owner-avatar{position:relative;width:46px;height:46px;border-radius:50%;padding:2px;background:conic-gradient(from 0deg,var(--cy),var(--violet),var(--green),var(--cy));}
+.owner-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:top;border:2px solid var(--bg)}
+.owner .who{line-height:1.2}
+.owner .who b{font-size:13px;display:block}
+.owner .who span{font-size:10px;color:var(--dim);letter-spacing:.5px}
+.owner .dot{position:absolute;right:1px;bottom:1px;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--bg)}
+
+/* Cards */
+.grid{display:grid;gap:18px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.card h3{font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card h3 .bar{width:3px;height:14px;background:var(--cy);border-radius:2px}
+.muted{color:var(--muted)} .dim{color:var(--dim)} .small{font-size:12px}
+.nt{margin-top:18px}
+
+/* Voice */
+.voice-wrap{display:flex;flex-direction:column;align-items:center;gap:18px;padding:26px 0 10px}
+.voice-btn{position:relative;width:150px;height:150px;border-radius:50%;border:none;cursor:pointer;background:radial-gradient(circle at 30% 30%,#123, #0a1424);border:2px solid var(--line2);display:grid;place-items:center;transition:.2s}
+.voice-btn .ring{position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(34,211,238,.25);animation:pulse 2.4s infinite}
+.voice-btn .core{width:86px;height:86px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cyan2));display:grid;place-items:center;font-size:34px;color:#04121a;font-weight:800;box-shadow:var(--glow)}
+.voice-btn:hover{transform:scale(1.03)}
+.voice-btn.listening .ring{animation:pulse .8s infinite;border-color:var(--green)}
+.voice-btn.listening{box-shadow:0 0 40px rgba(52,211,153,.4);}
+.voice-btn.thinking .core{background:linear-gradient(135deg,var(--amber),#f59e0b)}
+.voice-btn.working .core{background:linear-gradient(135deg,var(--violet),#7c3aed)}
+.voice-btn.speaking .core{background:linear-gradient(135deg,var(--green),#059669)}
+@keyframes pulse{0%{transform:scale(.9);opacity:.7}10%{transform:scale(1.15);opacity:0}100%{opacity:0}}
+.status-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:30px;background:var(--panel2);border:1px solid var(--line2);font-size:13px;font-weight:600}
+.status-pill .sdot{width:9px;height:9px;border-radius:50%;background:var(--dim)}
+.status-pill.ready .sdot{background:var(--green);box-shadow:0 0 10px var(--green)}
+.status-pill.listening .sdot{background:var(--green);animation:blink 1s infinite}
+.status-pill.thinking .sdot{background:var(--amber);animation:blink .7s infinite}
+.status-pill.working .sdot{background:var(--violet);animation:blink .5s infinite}
+.status-pill.speaking .sdot{background:var(--cy);animation:blink .8s infinite}
+.status-pill.offline .sdot{background:var(--red)}
+@keyframes blink{50%{opacity:.25}}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:11px;border:1px solid var(--line2);background:var(--panel2);color:var(--txt);font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--cy);color:var(--cy);}
+.btn.primary{background:linear-gradient(135deg,var(--cy),var(--cyan2));color:#04121a;border:none;font-weight:700}
+.btn.primary:hover{filter:brightness(1.1);color:#04121a}
+.btn.danger{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4);color:#fca5a5}
+.btn.danger:hover{background:rgba(239,68,68,.25);color:#fff}
+.btn.green{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);color:#6ee7b7}
+.btn.amber{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.4);color:#fcd34d;}
+.btn.sm{padding:6px 11px;font-size:12px;border-radius:9px;}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+
+/* STOP */
+.stop-wrap{position:relative;margin:22px 0}
+.stop-btn{width:100%;padding:20px;border-radius:var(--radius);border:2px solid rgba(239,68,68,.5);background:linear-gradient(180deg,rgba(127,29,29,.35),rgba(69,10,10,.4));color:#fecaca;font-size:18px;font-weight:800;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;transition:.2s;text-transform:uppercase}
+.stop-btn:hover{background:rgba(239,68,68,.35);box-shadow:0 0 30px rgba(239,68,68,.3)}
+.stop-btn .sico{width:22px;height:22px;background:#fecaca;border-radius:4px}
+
+/* Lists / rows */
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.row .l{display:flex;align-items:center;gap:11px;min-width:0}
+.row .l .ic{width:34px;height:34px;border-radius:9px;background:var(--panel2);border:1px solid var(--line2);display:grid;place-items:center;font-size:15px;flex-shrink:0}
+.row .l b{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .l span{font-size:11px;color:var(--dim)}
+.tag{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:700;letter-spacing:.4px;}
+.tag.green{background:rgba(52,211,153,.14);color:#6ee7b7}
+.tag.amber{background:rgba(251,191,36,.14);color:#fcd34d;}
+.tag.red{background:rgba(239,68,68,.14);color:#fca5a5}
+.tag.cyan{background:rgba(34,211,238,.14);color:#67e8f9}
+.tag.gray{background:rgba(148,163,184,.14);color:#cbd5e1}
+
+/* Chat */
+.chat{display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:4px}
+.msg{max-width:82%;padding:11px 14px;border-radius:14px;font-size:13.5px;line-height:1.5}
+.msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--cy),var(--cyan2));color:#04121a;border-bottom-right-radius:4px}
+.msg.jervis{align-self:flex-start;background:var(--panel2);border:1px solid var(--line2);border-bottom-left-radius:4px}
+.msg .who{font-size:10px;font-weight:700;letter-spacing:.5px;opacity:.7;margin-bottom:3px;text-transform:uppercase}
+.msg .time{font-size:10px;opacity:.55;margin-top:5px;display:block}
+.chat-input{display:flex;gap:10px;margin-top:14px}
+.chat-input input{flex:1;background:var(--panel2);border:1px solid var(--line2);border-radius:11px;padding:12px 14px;color:var(--txt);font-size:13.5px;outline:none}
+.chat-input input:focus{border-color:var(--cy)}
+
+/* Forms */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;color:var(--txt);font-size:13px;outline:none;font-family:inherit}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--cyan)}
+.field textarea{min-height:90px;resize:vertical}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)}
+.toggle:last-child{border-bottom:none}
+.toggle .t-l b{font-size:13px;display:block}
+.toggle .t-l span{font-size:11px;color:var(--dim)}
+.switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:#1c3350;border-radius:24px;cursor:pointer;transition:.2s}
+.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#8aa0bd;border-radius:50%;transition:.2s}
+.switch input:checked + .slider{background:var(--cyan)}
+.switch input:checked + .slider:before{transform:translateX(20px);background:#04121a}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(3,6,12,.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line2);border-radius:18px;padding:24px;max-width:520px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal h2{font-size:17px;margin-bottom:6px}
+.modal .m-sub{font-size:12px;color:var(--muted);margin-bottom:18px}
+.modal .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+
+/* Status bar */
+.statbar{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;}
+.stat .k{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.stat .v{font-size:22px;font-weight:800;margin-top:6px;}
+.stat .v.green{color:var(--green)} .stat .v.cyan{color:var(--cyan)} .stat .v.amber{color:var(--amber)} .stat .v.red{color:var(--red)}
+
+.section{display:none}
+.section.active{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.empty{text-align:center;padding:30px 10px;color:var(--dim);font-size:13px}
+.empty .big{font-size:30px;margin-bottom:8px}
+.banner{display:flex;gap:12px;align-items:flex-start;padding:13px 15px;border-radius:12px;font-size:12.5px;line-height:1.5;margin-bottom:16px}
+.banner.info{background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);color:#a5f3fc}
+.banner.warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);color:#fde68a}
+.banner.err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:#fecaca}
+.banner.ok{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);color:#a7f3d0}
+.banner b{display:block;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="brand"><div class="brand-logo">J</div><div><div class="brand-name">JERVIS</div><div class="brand-sub">Ali Raza · Command Center</div></div></div>
+  <nav class="nav" id="nav">
+    <button data-sec="home" class="active"><span class="ico">⌂</span> Home</button>
+    <button data-sec="computer"><span class="ico">🖥</span> Computer</button>
+    <button data-sec="github"><span class="ico">⌥</span> GitHub</button>
+    <button data-sec="linkedin"><span class="ico">in</span> LinkedIn</button>
+    <button data-sec="conversation"><span class="ico">💬</span> Conversation</button>
+    <button data-sec="settings"><span class="ico">⚙</span> Settings</button>
+  </nav>
+  <div class="side-foot">Ali Raza Jervis<br/>Voice-controlled Windows assistant<br/>v1.0.0</div>
+</aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Command Center</h1>
+        <div class="sub">Voice-controlled Windows desktop assistant — Created by Ali Raza</div>
+      </div>
+      <div class="top-right">
+        <div class="owner">
+          <div class="owner-avatar"><img src="assets/owner.jpg" alt="Ali Raza" /><span class="dot"></span></div>
+          <div class="who"><b>Ali Raza</b><span>Creator &amp; Owner</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <section class="section active" id="sec-home">
+      <div class="banner info" id="agent-banner">
+        <div><b>Agent connection</b><span id="agent-banner-text">Checking for the local JERVIS agent…</span></div>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3><span class="dot"></span>Voice Assistant</h3>
+          <div class="voice-wrap">
+            <button class="voice-btn" id="voiceBtn" title="Click to talk">
+              <span class="ring"></span>
+              <span class="core">🎙</span>
+            </button>
+            <div class="status-pill ready" id="statusPill"><span class="sdot"></span><span id="statusText">Ready</span></div>
+            <div class="small dim" id="micHint">Say "Hey Jervis" to wake, or click the mic to talk.</div>
+          </div>
+          <div class="btn-row" style="display:flex;gap:10px;justify-content:center;margin-top:6px">
+            <button class="btn sm" id="wakeBtn">Wake Jervis</button>
+            <button class="btn sm" id="testTtsBtn">Test Voice</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3><span class="dot"></span>Live Conversation</h3>
+          <div class="chat" id="homeChat"></div>
+          <div class="chat-input">
+            <input id="homeChatInput" placeholder="Type a message… (text chat backup)" />
+            <button class="btn primary" id="homeSendBtn">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stop">
+        <button class="stop-btn" id="stopBtn"><span class="sico"></span> STOP JERVIS</button>
+      </div>
+
+      <div class="statbar">
+        <div class="stat"><div class="k">Agent Status</div><div class="v amber" id="statAgent">Offline</div></div>
+        <div class="stat"><div class="k">Active Window</div><div class="v cyan" id="statWindow">—</div></div>
+        <div class="stat"><div class="k">Running Apps</div><div class="v" id="statApps">0</div></div>
+        <div class="stat"><div class="k">Recent Actions</div><div class="v" id="statActions">0</div></div>
+      </div>
+    </section>
+
+    <!-- COMPUTER -->
+    <section class="section" id="sec-computer">
+      <div class="banner info"><div><b>Computer Control</b><span>These actions run on your Windows machine through the local JERVIS agent. If the agent is offline, actions cannot execute — no fake results are shown.</span></div></div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3><span class="dot"></span>Quick Actions</h3>
+          <div class="btn-row" style="flex-wrap:wrap">
+            <button class="btn sm" data-act="chrome">Chrome</button>
+            <button class="btn sm" data-act="youtube">YouTube</button>
+            <button class="btn sm" data-act="vscode">VS Code</button>
+            <button class="btn sm" data-act="notepad">Notepad</button>
+            <button class="btn sm" data-act="calculator">Calculator</button>
+            <button class="btn sm" data-act="explorer">File Explorer</button>
+            <button class="btn sm" data-act="settings">Settings</button>
+            <button class="btn sm" data-act="volup">Vol +</button>
+            <button class="btn sm" data-act="voldown">Vol −</button>
+            <button class="btn sm" data-act="mute">Mute</button>
+            <button class="btn sm" data-act="screenshot">Screenshot</button>
+            <button class="btn sm" data-act="minimize">Minimize</button>
+            <button class="btn sm" data-act="desktop">Show Desktop</button>
+            <button class="btn sm" data-act="lock">Lock</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3><span class="dot"></span>Running Apps</h3>
+          <div id="appsList"><div class="empty"><div class="big">🖥</div>No agent connected. Run the Windows agent to see live apps.</div></div>
+        </div>
+      </div>
+      <div class="grid grid-2 mt">
+        <div class="card">
+          <h3><span class="dot"></span>Active Window</h3>
+          <div id="activeWindow" class="muted small">—</div>
+        </div>
+        <div class="card">
+          <h3><span class="dot"></span>Recent Actions</h3>
+          <div id="recentActions"><div class="empty">No actions yet.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GITHUB -->
+    <section class="section" id="sec-github">
+      <div class="banner info"><div><b>GitHub</b>Connected through the local agent using a secure token stored in the agent's environment (never in this page).</div></div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3><span class="dot"></span>Repositories</h3>
+          <div id="reposList"><div class="empty"><div class="big">⌥</div>Connect the agent to load your repositories.</div></div>
+        </div>
+        <div class="card">
+          <h3><span class="dot"></span>Actions</h3>
+          <div class="btn-row" style="flex-wrap:wrap">
+            <button class="btn sm" id="ghRefresh">Refresh Repos</button>
+            <button class="btn sm primary" id="ghCreate">Create Repo</button>
+            <button class="btn sm" id="ghUpload">Upload Project</button>
+            <button class="btn sm" id="ghStatus">Repo Status</button>
+          </div>
+          <div class="mt small dim" id="ghResult">Select an action. Public repo creation and destructive changes require your confirmation.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LINKEDIN -->
+    <section class="section" id="sec-linkedin">
+      <div class="banner info"><div><b>LinkedIn</b>Draft and review posts here. Publishing happens only after your explicit confirmation — and only if the agent has a connected LinkedIn account.</div></div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3><span class="dot"></span>Create Post</h3>
+          <div class="field"><label>Post type</label>
+            <select id="liType">
+              <option value="announcement">Project announcement</option>
+              <option value="technical">Technical post</option>
+              <option value="github">Turn GitHub project into post</option>
+              <option value="caption">Caption / update</option>
+            </select>
+          </div>
+          <div class="field"><label>Topic / project</label><input id="liTopic" placeholder="e.g. JERVIS voice assistant"/></div>
+          <div class="field"><label>Draft</label><textarea id="liDraft" placeholder="Write your post here, or let the agent draft it…"></textarea></div>
+          <div class="btn-row">
+            <button class="btn sm" id="liDraftBtn">Draft with Agent</button>
+            <button class="btn sm amber" id="liReviewBtn">Review</button>
+            <button class="btn sm green" id="liPublishBtn">Publish (confirm)</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3><span class="dot"></span>Review &amp; Publish</h3>
+          <div id="liReview" class="small muted">Draft a post to begin. Nothing is published without your confirmation.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONVERSATION -->
+    <section class="section" id="sec-conversation">
+      <div class="card">
+        <h3><span class="dot"></span>Conversation History</h3>
+        <div class="chat" id="convChat" style="max-height:520px"></div>
+        <div class="chat-input">
+          <input id="convInput" placeholder="Type a message…"/>
+          <button class="btn primary" id="convSendBtn">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="section" id="sec-settings">
+      <div class="grid grid-2">
+        <div class="card">
+          <h3><span class="dot"></span>Voice &amp; Language</h3>
+          <div class="field"><label>Assistant voice</label>
+            <select id="setVoice"><option>Jervis (default)</option><option>Calm male</option><option>Warm female</option></select>
+          </div>
+          <div class="field"><label>Language</label>
+            <select id="setLang"><option value="auto">Auto (Urdu / Roman Urdu / English / mixed)</option><option value="ur">Roman Urdu</option><option value="en">English</option></select>
+          </div>
+          <div class="field"><label>Microphone</label>
+            <select id="setMic"><option>Default microphone</option><option>Headset</option><option>External mic</option></select>
+          </div>
+          <div class="field"><label>Wake word</label><input id="setWake" value="Hey Jervis" /></div>
+        </div>
+        <div class="card">
+          <h3><span class="dot"></span>Permissions</h3>
+          <div class="toggle"><div class="t-l"><b>Computer control</b><span>Open apps, volume, windows, screenshots</span></div><label class="switch"><input type="checkbox" id="permComputer" checked><span class="slider"></span></label></div>
+          <div class="toggle"><div class="t-l"><b>File management</b><span>Search, open, create, rename, move files</span></div><label class="switch"><input type="checkbox" id="permFiles" checked><span class="slider"></span></label></div>
+          <div class="toggle"><div class="t-l"><b>GitHub</b><span>Repos, commits, pushes (token-based)</span></div><label class="switch"><input type="checkbox" id="permGit" checked><span class="slider"></span></label></div>
+          <div class="toggle"><div class="t-l"><b>LinkedIn</b><span>Draft &amp; publish (with confirmation)</span></div><label class="switch"><input type="checkbox" id="permLi" checked><span class="slider"></span></label></div>
+          <div class="toggle"><div class="t-l"><b>Start with Windows</b><span>Launch JERVIS on login</span></div><label class="switch"><input type="checkbox" id="permStartup"><span class="slider"></span></label></div>
+        </div>
+      </div>
+      <div class="grid grid-2 mt">
+        <div class="card">
+          <h3><span class="dot"></span>Connected Accounts</h3>
+          <div id="accounts">
+            <div class="row"><div class="l"><div class="ic">⌥</div><div><b>GitHub</b><span id="accGit">Not connected</span></div></div><span class="tag gray" id="accGitTag">—</span></div>
+            <div class="row"><div class="l"><div class="ic">in</div><div><b>LinkedIn</b><span id="accLi">Not connected</span></div></div><span class="tag gray" id="accLiTag">—</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3><span class="dot"></span>Memory Controls</h3>
+          <div class="small muted mb" style="margin-bottom:12px">JERVIS keeps conversation context during a session and optional preferences. You can clear them anytime.</div>
+          <div class="btn-row">
+            <button class="btn sm" id="memView">View Memory</button>
+            <button class="btn sm danger" id="memClear">Clear Memory</button>
+          </div>
+          <div class="mt small dim" id="memInfo">No stored memories yet.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">Confirm</h3>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="actions">
+      <button class="btn" id="modalCancel">Cancel</button>
+      <button class="btn primary" id="modalOk">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= STATE ================= */
+const state = {
+  agentConnected: false,
+  status: 'ready',
+  activeWindow: '—',
+  apps: [],
+  actions: [],
+  repos: [],
+  memory: [],
+  conv: [],
+  pendingConfirm: null,
+  ws: null
+};
+
+/* ================= DOM HELPERS ================= */
+const $ = (s) => document.querySelector(s);
+const el = (id) => document.getElementById(id);
+
+/* ================= NAV ================= */
+document.querySelectorAll('#nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#nav button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    el('sec-' + btn.dataset.sec).classList.add('active');
+  });
+});
+
+/* ================= AGENT BRIDGE ================= */
+const WS_URL = 'ws://127.0.0.1:8765';
+let ws = null;
+let wsRetry = 0;
+
+function setStatus(s, label) {
+  state.status = s;
+  const pill = el('statusPill');
+  pill.className = 'status-pill ' + s.toLowerCase();
+  el('statusText').textContent = label;
+}
+
+function setAgentConnected(connected) {
+  state.agentConnected = connected;
+  const banner = el('agent-banner');
+  const txt = el('agent-banner-text');
+  if (connected) {
+    banner.className = 'banner ok';
+    txt.textContent = 'Connected to the local JERVIS agent. Live data is shown below.';
+    el('statAgent').textContent = 'Online';
+    el('statAgent').className = 'v green';
+    setStatus('ready', 'Ready');
+  } else {
+    banner.className = 'banner warn';
+    txt.textContent = 'The local JERVIS agent is not running. Start it on your Windows machine to enable voice, computer control, and live data. No results are faked while offline.';
+    el('statAgent').textContent = 'Offline';
+    el('statAgent').className = 'v amber';
+    setStatus('offline', 'Offline');
+  }
+}
+
+function connectWS() {
+  try {
+    ws = new WebSocket(WS_URL);
+    ws.onopen = () => { wsRetry = 0; setAgentConnected(true); };
+    ws.onclose = () => { setAgentConnected(false); scheduleReconnect(); };
+    ws.onerror = () => { ws.close(); };
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        handleWSMessage(msg);
+      } catch (err) { console.warn('WS parse error', err); }
+    };
+  } catch (e) {
+    setAgentConnected(false);
+    scheduleReconnect();
+  }
+}
+
+function scheduleReconnect() {
+  if (wsRetry < 5) {
+    wsRetry++;
+    setTimeout(connectWS, 3000 * wsRetry);
+  } else {
+    setTimeout(connectWS, 30000);
+  }
+}
+
+function handleWSMessage(msg) {
+  switch (msg.type) {
+    case 'reply':
+      addChat('jervis', msg.text);
+      break;
+    case 'action':
+      addAction(msg.text);
+      break;
+    case 'repos':
+      state.repos = msg.repos || [];
+      renderRepos();
+      break;
+    case 'memory':
+      state.memory = msg.memory || {};
+      renderMemory();
+      break;
+    case 'apps':
+      state.apps = msg.apps || [];
+      renderApps();
+      break;
+    case 'window':
+      state.activeWindow = msg.title || '—';
+      el('activeWindow').textContent = state.activeWindow;
+      break;
+  }
+}
+
+function wsSend(obj) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(obj));
+    return true;
+  }
+  return false;
+}
+
+/* ================= CHAT ================= */
+function addChat(role, text) {
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = '<div class="who">' + (role === 'user' ? 'You' : 'Jervis') + '</div>' + escapeHtml(text) + '<span class="time">' + time + '</span>';
+  el('homeChat').appendChild(div);
+  el('convChat').appendChild(div.cloneNode(true));
+  el('homeChat').scrollTop = el('homeChat').scrollHeight;
+  el('convChat').scrollTop = el('convChat').scrollHeight;
+  state.conv.push({role, text, time});
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function sendText(text) {
+  if (!text.trim()) return;
+  addChat('user', text);
+  el('homeChatInput').value = '';
+  el('convInput').value = '';
+  if (state.agentConnected) {
+    setStatus('thinking', 'Thinking');
+    wsSend({type:'text', text});
+  } else {
+    setStatus('thinking', 'Thinking');
+    setTimeout(() => {
+      const reply = offlineReply(text);
+      addChat('jervis', reply + '  [offline — agent not running]');
+      setStatus('offline', 'Offline');
+    }, 600);
+  }
+}
+
+function offlineReply(text) {
+  const t = text.toLowerCase();
+  if (t.includes('who made you') || t.includes('who created you') || t.includes('creator')) {
+    return 'Mujhe Ali Raza ne banaya hai. My creator is Ali Raza.';
+  }
+  if (t.includes('hello') || t.includes('salam') || t.includes('hi ')) {
+    return 'Salam, Ali Raza! Kaise hain aap?';
+  }
+  if (t.includes('stop')) {
+    return 'STOP requested. The agent is not running, so there is nothing to stop.';
+  }
+  return 'Main abhi offline hoon — Windows agent connected nahi hai. Agent ko start karne ke baad main computer control, GitHub, aur LinkedIn actions perform kar sakta hoon.';
+}
+
+/* ================= VOICE ================= */
+let recognition = null;
+let listening = false;
+try {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    recognition = new SR();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'ur-PK';
+    recognition.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      setStatus('working', 'Working');
+      sendText(text);
+    };
+    recognition.onerror = (e) => {
+      setStatus('offline', 'Offline');
+      el('micHint').textContent = 'Mic error: ' + e.error + '. Try the text chat.';
+    };
+    recognition.onend = () => { listening = false; el('voiceBtn').classList.remove('listening'); };
+  }
+} catch (e) { console.warn('SR unavailable', e); }
+
+el('voiceBtn').addEventListener('click', () => {
+  if (!recognition) { el('micHint').textContent = 'Speech recognition not supported in this browser. Use text chat.'; return; }
+  if (listening) { recognition.stop(); return; }
+  listening = true;
+  el('voiceBtn').classList.add('listening');
+  setStatus('listening', 'Listening');
+  try { recognition.start(); } catch (e) {}
+});
+
+el('wakeBtn').addEventListener('click', () => {
+  addChat('jervis', 'Ji, main sun raha hoon. (Wake word is handled locally by the Windows agent.)');
+});
+
+el('testTtsBtn').addEventListener('click', () => {
+  if ('speechSynthesis' in window) {
+    const u = new SpeechSynthesisUtterance('Ji, main Jervis hoon. Ali Raza, kaise hain aap?');
+    u.lang = 'ur-PK';
+    speechSynthesis.speak(u);
+    setStatus('speaking', 'Speaking');
+    u.onend = () => setStatus('ready', 'Ready');
+  } else {
+    el('micHint').textContent = 'TTS not supported in this browser.';
+  }
+});
+
+/* ================= TEXT INPUT ================= */
+el('homeSendBtn').addEventListener('click', () => sendText(el('homeChatInput').value));
+el('homeChatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendText(el('homeChatInput').value); });
+el('convSendBtn').addEventListener('click', () => sendText(el('convInput').value));
+el('convInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendText(el('convInput').value); });
+
+/* ================= STOP ================= */
+el('stopBtn').addEventListener('click', () => {
+  confirmAction('Stop Jervis?', 'This will stop the local JERVIS agent on your Windows machine.', () => {
+    if (state.agentConnected) {
+      wsSend({type:'stop'});
+      addChat('jervis', 'STOP requested. Agent is stopping.');
+    } else {
+      addChat('jervis', 'Agent is not running, so there is nothing to stop.');
+    }
+  });
+});
+
+/* ================= COMPUTER ACTIONS ================= */
+document.querySelectorAll('[data-act]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const act = btn.dataset.act;
+    if (!state.agentConnected) {
+      addChat('jervis', 'Agent offline — cannot run "' + act + '". Start the Windows agent first.');
+      return;
+    }
+    setStatus('working', 'Working');
+    wsSend({type:'computer', action: act});
+  });
+});
+
+function addAction(text) {
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  state.actions.unshift({text, time});
+  state.actions = state.actions.slice(0, 20);
+  renderActions();
+}
+
+function renderActions() {
+  el('statActions').textContent = state.actions.length;
+  const box = el('recentActions');
+  if (!state.actions.length) { box.innerHTML = '<div class="empty">No actions yet.</div>'; return; }
+  box.innerHTML = state.actions.map(a => '<div class="row"><div class="l"><div class="ic">⚡</div><div><b>' + escapeHtml(a.text) + '</b><span>' + a.time + '</span></div></div></div>').join('');
+}
+
+function renderApps() {
+  el('statApps').textContent = state.apps.length;
+  const box = el('appsList');
+  if (!state.apps.length) { box.innerHTML = '<div class="empty">No apps detected.</div>'; return; }
+  box.innerHTML = state.apps.map(a => '<div class="row"><div class="l"><div class="ic">🖥</div><div><b>' + escapeHtml(a) + '</b></div></div></div>').join('');
+}
+
+/* ================= GITHUB ================= */
+el('ghRefresh').addEventListener('click', () => {
+  if (!state.agentConnected) { el('ghResult').textContent = 'Agent offline — cannot load repos.'; return; }
+  wsSend({type:'github', action:'list'});
+  el('ghResult').textContent = 'Refreshing repos…';
+});
+el('ghCreate').addEventListener('click', () => {
+  if (!state.agentConnected) { el('ghResult').textContent = 'Agent offline.'; return; }
+  const name = prompt('New repo name (lowercase, hyphens):');
+  if (!name) return;
+  const priv = confirm('Public repo? (Public repos are visible to everyone. Cancel = private)') ? false : true;
+  confirmAction('Create GitHub repo "' + name + '"?', 'This will create a ' + (priv ? 'private' : 'public') + ' repository on your GitHub account.', () => {
+    wsSend({type:'github', action:'create', name, private: priv});
+    el('ghResult').textContent = 'Creating repo "' + name + '"…';
+  });
+});
+el('ghUpload').addEventListener('click', () => {
+  if (!state.agentConnected) { el('ghResult').textContent = 'Agent offline.'; return; }
+  const repo = prompt('Target repo name:');
+  if (!repo) return;
+  const path = prompt('Local file/folder path to upload:');
+  if (!path) return;
+  confirmAction('Upload to "' + repo + '"?', 'This uploads "' + path + '" to the repo. This is a real GitHub change.', () => {
+    wsSend({type:'github', action:'upload', repo, path});
+    el('ghResult').textContent = 'Uploading to "' + repo + '"…';
+  });
+});
+el('ghStatus').addEventListener('click', () => {
+  if (!state.agentConnected) { el('ghResult').textContent = 'Agent offline.'; return; }
+  wsSend({type:'github', action:'status'});
+  el('ghResult').textContent = 'Checking GitHub status…';
+});
+
+function renderRepos() {
+  const box = el('reposList');
+  if (!state.repos.length) { box.innerHTML = '<div class="empty">No repos loaded.</div>'; return; }
+  box.innerHTML = state.repos.map(r =>
+    '<div class="row"><div class="l"><div class="ic">⌥</div><div><b>' + escapeHtml(r.name) + '</b><span>' + (r.description || 'No description') + '</span></div></div>' +
+    '<span class="tag ' + (r.private ? 'amber' : 'green') + '">' + (r.private ? 'Private' : 'Public') + '</span></div>'
+  ).join('');
+}
+
+/* ================= LINKEDIN ================= */
+el('liDraftBtn').addEventListener('click', () => {
+  const type = el('liType').value;
+  const topic = el('liTopic').value || 'my project';
+  if (state.agentConnected) {
+    wsSend({type:'linkedin', action:'draft', postType: type, topic});
+    el('liReview').textContent = 'Drafting…';
+  } else {
+    el('liReview').textContent = 'Agent offline — draft locally:\n\n' + localDraft(type, topic) + '\n\n(offline draft)';
+  }
+});
+el('liReviewBtn').addEventListener('click', () => {
+  const draft = el('liDraft').value;
+  if (!draft) { el('liReview').textContent = 'Nothing to review yet.'; return; }
+  el('liReview').textContent = 'REVIEW — not published:\n\n' + draft;
+});
+el('liPublishBtn').addEventListener('click', () => {
+  const draft = el('liDraft').value;
+  if (!draft) { el('liReview').textContent = 'Nothing to publish.'; return; }
+  if (!state.agentConnected) { el('liReview').textContent = 'Agent offline — cannot publish. Copy the draft and publish manually on LinkedIn.'; return; }
+  confirmAction('Publish this LinkedIn post?', 'This will post to your LinkedIn account. This action cannot be undone.', () => {
+    wsSend({type:'linkedin', action:'publish', text: draft});
+    el('liReview').textContent = 'Publishing…';
+  });
+});
+
+function localDraft(type, topic) {
+  if (type === 'announcement') return 'I just shipped a new project: ' + topic + '.\n\nBuilt to be practical, reliable, and easy to use. Open to feedback and collaboration.\n\n#Project #BuildInPublic #Tech';
+  if (type === 'technical') return 'Working on ' + topic + ' — sharing some technical notes.\n\nHappy to discuss details with anyone interested.\n\n#Tech #Development';
+  if (type === 'github') return 'Just pushed a new project to GitHub: ' + topic + '.\n\nCheck it out and let me know what you think.\n\n#GitHub #OpenSource';
+  return 'Update: ' + topic + '\n\n#Tech #Update';
+}
+
+/* ================= MEMORY ================= */
+el('memView').addEventListener('click', () => {
+  if (state.agentConnected) { wsSend({type:'memory', action:'view'}); }
+  else { el('memInfo').textContent = 'Agent offline — no memory available.'; }
+});
+el('memClear').addEventListener('click', () => {
+  confirmAction('Clear all memory?', 'This deletes stored preferences and conversation context.', () => {
+    if (state.agentConnected) { wsSend({type:'memory', action:'clear'}); }
+    el('memInfo').textContent = 'Memory cleared.';
+  });
+});
+function renderMemory() {
+  const keys = Object.keys(state.memory);
+  el('memInfo').textContent = keys.length ? 'Stored: ' + keys.join(', ') : 'No stored memories.';
+}
+
+/* ================= MODAL ================= */
+function confirmAction(title, sub, onOk) {
+  el('modalTitle').textContent = title;
+  el('modalSub').textContent = sub;
+  el('modalBg').classList.add('open');
+  state.pendingConfirm = onOk;
+}
+el('modalCancel').addEventListener('click', () => { el('modalBg').classList.remove('open'); state.pendingConfirm = null; });
+el('modalOk').addEventListener('click', () => {
+  el('modalBg').classList.remove('open');
+  if (state.pendingConfirm) { const fn = state.pendingConfirm; state.pendingConfirm = null; fn(); }
+});
+
+/* ================= INIT ================= */
+connectWS();
+</script>
+</body>
+</html>
