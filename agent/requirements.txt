@@ -1,0 +1,19 @@
+# Ali Raza Jervis — Windows Agent dependencies
+# Install on Windows:  pip install -r requirements.txt
+
+# Speech recognition (Urdu / Roman Urdu / English / mixed)
+SpeechRecognition>=3.10.0
+pyaudio>=0.2.13
+
+# Text-to-speech (Windows SAPI)
+pywin32>=306
+
+# Computer automation (keyboard/mouse/window control)
+pyautogui>=0.9.54
+psutil>=5.9.0
+
+# Dashboard bridge (local WebSocket)
+websockets>=12.0
+
+# Optional: richer local generation (not required for core features)
+# openai>=1.0.0
